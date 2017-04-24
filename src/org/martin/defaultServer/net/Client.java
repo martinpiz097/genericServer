@@ -6,17 +6,15 @@
 package org.martin.defaultServer.net;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.martin.defaultServer.interfaces.ClientListener;
+import org.martin.defaultServer.listeners.ClientListener;
 import org.martin.defaultServer.interfaces.Communicable;
-import org.martin.defaultServer.system.SysInfo;
 
 /**
  *
@@ -31,6 +29,17 @@ public class Client extends Thread implements Communicable{
     private List listCliObjects; // Lista para manejar objetos como un objeto
                                 // usuario o lo que el programador necesite.
     
+//    public enum STREAMS_TYPE{
+//        OBJECTS, DATA, GENERIC;
+//        // String, File, etc
+//    }
+    
+    // Depende del tipo de streams a instanciar es como trabajara el cliente
+    // y asi permite poder interactuar de diferentes maneras en los listeners
+//    public Client(Socket sockClient, STREAMS_TYPE streamsType) throws IOException {
+//        this(sockClient, new ObjectOutputStream(sockClient.getOutputStream()), 
+//                new ObjectInputStream(sockClient.getInputStream()));
+//    }
     public Client(Socket sockClient) throws IOException {
         this(sockClient, new ObjectOutputStream(sockClient.getOutputStream()), 
                 new ObjectInputStream(sockClient.getInputStream()));
