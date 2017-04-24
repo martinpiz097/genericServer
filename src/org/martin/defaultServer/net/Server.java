@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.martin.defaultServer.exceptions.NullListenersException;
 import org.martin.defaultServer.listeners.ClientDisconnectedListener;
 import org.martin.defaultServer.listeners.NewClientListener;
+import org.martin.defaultServer.system.ServerMessages;
 import org.martin.defaultServer.system.SysInfo;
 
 /**
@@ -24,10 +25,15 @@ import org.martin.defaultServer.system.SysInfo;
 public class Server extends Thread{
     private final ServerSocket serverSock;
     private final List<Client> clientsConnected;
-    private static Server server;
+    
     private NewClientListener ncListener;
     private ClientDisconnectedListener cliDisListener;
+    
+    private final Clock clock;
     private boolean isServerOnline;
+    private boolean clockEnable;
+    
+    private static Server server;
     
     /*static{
         try {
@@ -72,6 +78,8 @@ public class Server extends Thread{
         serverSock = new ServerSocket(port);
         clientsConnected = new LinkedList<>();
         isServerOnline = true;
+        clockEnable = true;
+        clock = Clock.getInstance();
     }
     
     public void setNcListener(NewClientListener ncListener){
@@ -83,7 +91,13 @@ public class Server extends Thread{
     }
     
     public void addClient(Client client){
+        if (client.getState() != State.RUNNABLE)
+            client.start();
         clientsConnected.add(client);
+    }
+    
+    public void addClient(Socket sockClient) throws IOException{
+        addClient(new Client(sockClient));
     }
     
     public List<Client> getClientsConnected(){
@@ -99,8 +113,16 @@ public class Server extends Thread{
             isServerOnline = !isServerOnline;
     }
     
+    public void enableClock(boolean enable){
+        clockEnable = enable;
+    }
+    
     public void disconnectClient(Client client){
         cliDisListener.onClientDisconnected(client);
+    }
+    
+    public void showServerMessage(String msg){
+        System.out.println(clockEnable ? clock.getCurrentTime()+msg : msg);
     }
     
     public void run() {
@@ -117,33 +139,36 @@ public class Server extends Thread{
         
         // Se usan dos while para que al momento de suspenderse el servidor se siga teniendo en ejecucion
         // pero sin interactuar con la red.
-        System.out.println("Server started!");
+        showServerMessage(ServerMessages.STARTED);
         while (true) {
             try {
                 while (isServerOnline) {
-                    System.out.println("Waiting for clients.....");
+                    showServerMessage(ServerMessages.WAITING_CLIENTS);
                     ncListener.onClientConnected(serverSock.accept());
-                    System.out.println("Client connected");
+                    showServerMessage(ServerMessages.CLIENT_CONNECTED);
                 }
                 Thread.sleep(100);
-                System.out.println("Server suspended");
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
+                showServerMessage(ServerMessages.SUSPENDED);
+            } catch (InterruptedException | IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
     }
-//    
-//    public static void main(String[] args) {
+      
+//    public static void main(String[] args) throws InterruptedException {
 //        try {
 //            Server.newServer();
 //            Server server = Server.getServer();
 //            server.setNcListener(new NewClientListener() {
 //                @Override
 //                public void onClientConnected(Socket sockClient) {
-//                    System.out.println("se conecto un cliente");
+//                    try {
+//                        new ObjectOutputStream(sockClient.getOutputStream())
+//                                .writeObject("xd");
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
 //                }
 //            });
 //            server.setClientDisconnetedListener(new ClientDisconnectedListener() {
@@ -155,6 +180,20 @@ public class Server extends Thread{
 //            server.start();
 //            Socket sock1 = new Socket("localhost", SysInfo.DEFAULT_PORT);
 //            Socket sock2 = new Socket("localhost", SysInfo.DEFAULT_PORT);
+//            Client client = new Client(new Socket("localhost", SysInfo.DEFAULT_PORT));
+//            client.setOwnListener(new ClientListener() {
+//                @Override
+//                public void onClientInExecution() {
+//                    try {
+//                        System.out.println(client.getReceivedObject());
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+//                    } catch (ClassNotFoundException ex) {
+//                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//            });
+//            client.start();
 //            server.suspendServer();
 //            Server.restartServer();
 //            

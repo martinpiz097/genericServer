@@ -1,0 +1,5 @@
+VERSION 1.0 Se creo arquitectura del servidor con los metodos especificos
+
+VERSION 1.0b Se hicieron pruebas de conexion
+
+VERSION 1.1 Se agregaron Server Messages y clase Clock para ver tiempo del sistema en los mensajes del servidor y se puede escoger si se desea o no ver el tiempo.
